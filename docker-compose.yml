@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  database:
+    image: mongo:5.0.4
+    volumes:
+      - ./data/db:/data/db
+  backend:
+    build:
+      context: ./backend
+    volumes:
+      - ./data/images:/app/images
+      - ./backend/app:/app/app
+    ports:
+      - 8000:8000
+  frontend:
+    build:
+      context: ./frontend
+    volumes:
+      - ./frontend/src:/usr/src/app/src
+      - ./frontend/public:/usr/src/app/public
+    ports:
+      - 3000:3000
