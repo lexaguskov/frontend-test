@@ -6,6 +6,8 @@ Build a simple frontend based on this boilerplate for these user stories:
 2. User should be able to zoom and pan a drone image
 3. User should be able to add a point of interest with a comment
 
+Estimated time: 4-6 hours
+
 ## Things we will look at
 
 1. Maintainability of code
