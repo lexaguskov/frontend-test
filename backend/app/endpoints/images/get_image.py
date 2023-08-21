@@ -1,6 +1,6 @@
 import os
 
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status
 from fastapi.responses import FileResponse
 
 router = APIRouter()
@@ -14,7 +14,7 @@ from app.config import config
 async def get_image(file_stem: str):
     print(file_stem, flush=True)
     if not file_stem.isalnum():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File stem must be alphanumeric")
+        return status.HTTP_404_NOT_FOUND
     
     file_path = f"{config.images_dir}/{file_stem}.jpg"  
 
