@@ -51,16 +51,18 @@ const Preview = styled.button`
 
 // TODO: calculate initial scale
 const Image = ({ url }) => {
+  const [pins, setPins] = useState([]);
+  const [activePin, setActivePin] = useState(null);
 
-  const [pinX, setPinX] = useState(-1);
-  const [pinY, setPinY] = useState(-1);
-
-  const onPin = (e) => {
-    const { layerX, layerY } = e.nativeEvent;
-    console.log(layerX, layerY);
-    setPinX(layerX);
-    setPinY(layerY);
+  const onPin = (e, j, k) => {
+    const { offsetX, offsetY } = j;
+    // console.log(e.instance, j.offsetX, j.offsetY);
+    //const { layerX, layerY } = j;
+    // console.log(layerX, layerY);
+    setPins(p => [...p, { x: offsetX, y: offsetY }]);
   }
+
+  console.log('p', pins);
 
   return (
     <TransformWrapper
@@ -68,6 +70,7 @@ const Image = ({ url }) => {
       initialScale={0.1}
       minScale={0.1}
       centerOnInit={true}
+      onPanningStart={onPin}
     >
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
         <div style={{ width: '100vw', height: '100vh' }}>
@@ -90,18 +93,26 @@ const Image = ({ url }) => {
             wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
           >
             <img src={url} alt="test" />
-            <button
-              style={{ position: 'absolute', width: '100%', height: '100%', background: 'none', border: 'none' }}
-              onClick={onPin}
-            >
-              Click me!
-            </button>
-            <div style={{ position: 'absolute', fontSize: '10rem', color: 'red', left: pinX, top: pinY }}>
-              ●
-            </div>
+            {pins.filter(p => p !== activePin).map((p) =>
+              <Pin key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => setActivePin(p)} />
+            )}
+            {activePin && <Pin x={activePin.x} y={activePin.y} active />}
           </TransformComponent>
         </div>
       )}
     </TransformWrapper>
   )
-} 
+}
+
+const Pin = styled.button`
+  position: absolute;
+  font-size: 10rem;
+  color: ${p => p.active ? "red" : "blue"};
+  left: ${p => p.x}px;
+  top: ${p => p.y}px;
+  margin-left: -5rem;
+  margin-top: -8rem;
+  &:after {
+    content: "●";
+  }
+`;
