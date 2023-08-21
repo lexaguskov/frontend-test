@@ -10,8 +10,20 @@ router = APIRouter()
 
 def resize_image(input_path, output_path, new_size):
     img = Image.open(input_path)
+    w = img.width
+    h = img.height
+    level = 0
+    while w > 320 and h > 480:
+        level += 1
+        w /= 2
+        h /= 2
+
+        copy = img.copy()
+        copy.thumbnail((w, h))
+        copy.save(output_path + "@" + str(level) + ".jpg", "JPEG")
+
     img.thumbnail(new_size)
-    img.save(output_path, "JPEG")
+    img.save(output_path + '.thumb.jpg', "JPEG")
 
 # NOTE: this functions generates previews on the fly
 # perhaps we should consider generating them during the data preparation phase
@@ -22,11 +34,11 @@ def resize_image(input_path, output_path, new_size):
     status_code=status.HTTP_200_OK,
 )
 async def get_image_preview(file_stem: str):
-    print(file_stem, flush=True)
     if not file_stem.isalnum():
         return status.HTTP_404_NOT_FOUND
 
-    preview_path = f"{config.previews_dir}/{file_stem}.jpg"
+    preview_path = f"{config.previews_dir}/{file_stem}.thumb.jpg"
+    pp = f"{config.previews_dir}/{file_stem}"
     file_path = f"{config.images_dir}/{file_stem}.jpg"
 
     print(preview_path, file_path, flush=True)
@@ -38,7 +50,7 @@ async def get_image_preview(file_stem: str):
         return status.HTTP_404_NOT_FOUND
 
     new_size = (150, 100)
-    resize_image(file_path, preview_path, new_size)
+    resize_image(file_path, pp, new_size)
     # FIXME: preview file could be corrupted if an exception happens during conversion
 
     return FileResponse(preview_path)
