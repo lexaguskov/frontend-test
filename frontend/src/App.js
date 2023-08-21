@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { MiniMap, TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { MiniMap, TransformWrapper, TransformComponent, useTransformInit } from "react-zoom-pan-pinch";
 
 
 const domain = 'http://localhost:8000';
@@ -8,6 +8,7 @@ const domain = 'http://localhost:8000';
 // TODO: local file cache
 // TODO: mobile version
 // TODO: loading progress bar
+// TODO: save selection
 
 export const App = () => {
   const [images, setImages] = useState([]);
@@ -50,6 +51,17 @@ const Preview = styled.button`
 
 // TODO: calculate initial scale
 const Image = ({ url }) => {
+
+  const [pinX, setPinX] = useState(-1);
+  const [pinY, setPinY] = useState(-1);
+
+  const onPin = (e) => {
+    const { layerX, layerY } = e.nativeEvent;
+    console.log(layerX, layerY);
+    setPinX(layerX);
+    setPinY(layerY);
+  }
+
   return (
     <TransformWrapper
       style={{ width: "100vw" }}
@@ -75,9 +87,18 @@ const Image = ({ url }) => {
             </div>
           </div>
           <TransformComponent
-            wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 50px)" }}
+            wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
           >
             <img src={url} alt="test" />
+            <button
+              style={{ position: 'absolute', width: '100%', height: '100%', background: 'none', border: 'none' }}
+              onClick={onPin}
+            >
+              Click me!
+            </button>
+            <div style={{ position: 'absolute', fontSize: '10rem', color: 'red', left: pinX, top: pinY }}>
+              ●
+            </div>
           </TransformComponent>
         </div>
       )}
