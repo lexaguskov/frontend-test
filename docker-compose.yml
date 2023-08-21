@@ -15,6 +15,7 @@ services:
       context: ./backend
     volumes:
       - ./data/images:/app/images
+      - ./data/previews:/app/previews
       - ./backend/app:/app/app
     ports:
       - 8000:80

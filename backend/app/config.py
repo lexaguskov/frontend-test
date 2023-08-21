@@ -6,6 +6,7 @@ class Config(BaseSettings):
 
     postgres_url: str
     images_dir: str
+    previews_dir: str
 
 
 config = Config()

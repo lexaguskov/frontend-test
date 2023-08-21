@@ -40,7 +40,7 @@ export const App = () => {
   return <div style={{ width: '100vw', height: '100vh' }}>
     {images.map(f => (
       <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
-        <img src={`${domain}/images/${f.file_stem}`} width="150" height="100" />
+        <img src={`${domain}/images/${f.file_stem}/preview`} width="150" height="100" />
       </Preview>
     ))}
     {images.length === 0 && <div>nothing loaded</div>}

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
 from app.endpoints import health
-from app.endpoints.images import get_image, list_images
+from app.endpoints.images import get_image, list_images, get_image_preview
 
 from .database.comment import Comment
 from .database.database import engine
@@ -45,6 +45,7 @@ def redirect_to_docs():
 api.include_router(health.router)
 api.include_router(list_images.router)
 api.include_router(get_image.router)
+api.include_router(get_image_preview.router)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
