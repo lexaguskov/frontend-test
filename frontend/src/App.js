@@ -38,9 +38,9 @@ export const App = () => {
     load();
   }, []);
 
-  useEffect(() => {
-    fetchAndSaveToCache(domain + '/images/' + selection, selection).then(url => console.log('cached', url))
-  }, [selection]);
+  // useEffect(() => {
+  //   fetchAndSaveToCache(domain + '/images/' + selection + "/3", selection).then(url => console.log('cached', url))
+  // }, [selection]);
 
   return <div style={{ width: '100vw', height: '100vh' }}>
     {images.map(f => (
@@ -50,7 +50,7 @@ export const App = () => {
     ))}
     {images.length === 0 && <div>nothing loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
-      <Image url={getCached(selection) || `${domain}/images/${selection}`} />
+      <Image url={`${domain}/images/${selection}/2`} />
     )}
   </div >;
 };
@@ -131,18 +131,18 @@ const Image = ({ url, onUpdateMap }) => {
             <img src={url} alt="test" />
             {pins.filter(p => p !== activePin && p !== newPin).map((p) =>
               <Pin scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => setActivePin(p)}>
-                {<div style={{ textWrap: 'nowrap', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }}>
+                {<div style={{ textWrap: 'nowrap', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', margin: '-.6em 0 0 100px' }}>
                   Some text
                 </div>}
               </Pin>
             )}
             {activePin && <Pin scale={pinScale} x={activePin.x} y={activePin.y} active>
-              <button style={{ color: 'red', cursor: 'pointer', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }} onClick={deleteActivePin}>
+              <button style={{ color: 'red', cursor: 'pointer', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', margin: '-.6em 0 0 100px' }} onClick={deleteActivePin}>
                 X&nbsp;Delete
               </button>
             </Pin>}
             {newPin && <Pin scale={pinScale} x={newPin.x} y={newPin.y}>
-              <button style={{ color: 'blue', cursor: 'pointer', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }} onClick={addNewPin}>
+              <button style={{ color: 'blue', cursor: 'pointer', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', margin: '-.6em 0 0 100px' }} onClick={addNewPin}>
                 +&nbsp;Add
               </button>
             </Pin>}
@@ -176,20 +176,23 @@ const Preview = styled.button`
 `;
 
 const Pin = styled.button`
-  position: absolute;
-  font-size: 10rem;
-  color: ${p => p.active ? "red" : "blue"};
-  left: ${p => p.x}px;
-  top: ${p => p.y}px;
-  margin-left: -5rem;
-  margin-top: -8rem;
-  cursor: pointer;
-  background: none;
-  border: none;
-  &:after {
-    content: "●";
-  }
-  transform: scale(${p => p.scale});
+position: absolute;
+font-size: 10rem;
+left: ${p => p.x}px;
+top: ${p => p.y}px;
+margin-left: -5rem;
+margin-top: -8rem;
+cursor: pointer;
+background:  ${p => p.active ? "red" : "blue"};
+color:  ${p => p.active ? "red" : "blue"};
+border: none;
+width: 5rem;
+height: 5rem;
+border-radius: 2.5rem;
+transform: scale(${p => p.scale});
+border: .5rem solid white;
+margin-top: -2.5rem;
+margin-left: -2.5rem;
   text-shadow: -.3rem -.3rem 0 white, .3rem -.3rem 0 white, -.3rem .3rem 0 white, .3rem .3rem 0 white;
 `;
 

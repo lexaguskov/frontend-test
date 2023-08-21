@@ -41,7 +41,36 @@ async def get_image_preview(file_stem: str):
     pp = f"{config.previews_dir}/{file_stem}"
     file_path = f"{config.images_dir}/{file_stem}.jpg"
 
-    print(preview_path, file_path, flush=True)
+    if os.path.exists(preview_path) and os.path.isfile(preview_path):
+        return FileResponse(preview_path)
+
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        return status.HTTP_404_NOT_FOUND
+
+    new_size = (150, 100)
+    resize_image(file_path, pp, new_size)
+    # FIXME: preview file could be corrupted if an exception happens during conversion
+
+    return FileResponse(preview_path)
+
+
+@router.get(
+    "/images/{file_stem}/{level}",
+    status_code=status.HTTP_200_OK,
+)
+async def get_image_mipmap(file_stem: str, level: str):
+    if not file_stem.isalnum():
+        return status.HTTP_404_NOT_FOUND
+
+    if not level.isnumeric():
+        return status.HTTP_404_NOT_FOUND
+
+    if int(level) < 1 or int(level) > 4:
+        return status.HTTP_404_NOT_FOUND
+
+    preview_path = f"{config.previews_dir}/{file_stem}@{level}.jpg"
+    pp = f"{config.previews_dir}/{file_stem}"
+    file_path = f"{config.images_dir}/{file_stem}.jpg"
 
     if os.path.exists(preview_path) and os.path.isfile(preview_path):
         return FileResponse(preview_path)
