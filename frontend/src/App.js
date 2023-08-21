@@ -67,7 +67,7 @@ const Image = ({ url, onUpdateMap }) => {
     panInfo.current = { x: j.offsetX, y: j.offsetY };
   }
   const onPin = (e, j) => {
-    console.log(e, j);
+    // console.log(e, j);
     if (j.target.tagName === "BUTTON") return;
     const { offsetX, offsetY } = j;
     // console.log(e.instance, j.offsetX, j.offsetY);
@@ -99,16 +99,18 @@ const Image = ({ url, onUpdateMap }) => {
 
   // const [mapPos, setMapPos] = useState({ x: 0, y: 0 });
 
-  // const onPan = (e) => {
-  //   const x = 0.5 * e.state.positionX / e.instance.bounds.minPositionX;
-  //   const y = 0.5 * e.state.positionY / e.instance.bounds.minPositionY;
-  //   setMapPos({ x, y });
+  const [pinScale, setPinScale] = useState(0);
+  const onPan = (e) => {
+    setPinScale(0.2 * 1 / e.state.scale);
+    //   const x = 0.5 * e.state.positionX / e.instance.bounds.minPositionX;
+    //   const y = 0.5 * e.state.positionY / e.instance.bounds.minPositionY;
+    //   setMapPos({ x, y });
 
-  //   console.log(e.state.positionX / e.state.scale, e.instance.bounds.minPositionX / e.state.scale);
+    //   console.log(e.state.positionX / e.state.scale, e.instance.bounds.minPositionX / e.state.scale);
 
 
-  //   //console.log(e.bounds.minPositionX * 1 / scale, e.bounds.minPositionY * 1 / scale);
-  // }
+    //   //console.log(e.bounds.minPositionX * 1 / scale, e.bounds.minPositionY * 1 / scale);
+  }
 
   return (
     <TransformWrapper
@@ -118,27 +120,28 @@ const Image = ({ url, onUpdateMap }) => {
       centerOnInit={true}
       onPanningStop={onPin}
       onPanningStart={onPanningStart}
-    // onTransformed={onPan}
+      onTransformed={onPan}
     >
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
         <div style={{ width: '100vw', height: '100vh' }}>
+          {/* {console.log('rrrr', rest.instance.transformState.scale)} */}
           <TransformComponent
             wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
           >
             <img src={url} alt="test" />
             {pins.filter(p => p !== activePin && p !== newPin).map((p) =>
-              <Pin key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => setActivePin(p)}>
+              <Pin scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => setActivePin(p)}>
                 {<div style={{ textWrap: 'nowrap', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }}>
                   Some text
                 </div>}
               </Pin>
             )}
-            {activePin && <Pin x={activePin.x} y={activePin.y} active>
+            {activePin && <Pin scale={pinScale} x={activePin.x} y={activePin.y} active>
               <button style={{ color: 'red', cursor: 'pointer', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }} onClick={deleteActivePin}>
                 X&nbsp;Delete
               </button>
             </Pin>}
-            {newPin && <Pin x={newPin.x} y={newPin.y}>
+            {newPin && <Pin scale={pinScale} x={newPin.x} y={newPin.y}>
               <button style={{ color: 'blue', cursor: 'pointer', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }} onClick={addNewPin}>
                 +&nbsp;Add
               </button>
@@ -148,7 +151,6 @@ const Image = ({ url, onUpdateMap }) => {
           <div className="tools" style={{ position: "absolute", right: 0, top: 120, display: 'flex', flexDirection: 'column' }}>
             <button onClick={() => resetTransform()}>x</button>
             <button onClick={() => zoomIn()}>+</button>
-            {console.log('r', rest)}
             <button onClick={() => zoomOut()}>-</button>
             {/* <div
               style={{
@@ -187,6 +189,7 @@ const Pin = styled.button`
   &:after {
     content: "●";
   }
+  transform: scale(${p => p.scale});
   text-shadow: -.3rem -.3rem 0 white, .3rem -.3rem 0 white, -.3rem .3rem 0 white, .3rem .3rem 0 white;
 `;
 
