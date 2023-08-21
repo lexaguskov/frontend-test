@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { MiniMap, TransformWrapper, TransformComponent, useTransformInit } from "react-zoom-pan-pinch";
+import { fetchAndSaveToCache, getCached } from './localCache';
 
 
 const domain = 'http://localhost:8000';
@@ -37,6 +38,10 @@ export const App = () => {
     load();
   }, []);
 
+  useEffect(() => {
+    fetchAndSaveToCache(domain + '/images/' + selection, selection).then(url => console.log('cached', url))
+  }, [selection]);
+
   return <div style={{ width: '100vw', height: '100vh' }}>
     {images.map(f => (
       <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
@@ -45,15 +50,10 @@ export const App = () => {
     ))}
     {images.length === 0 && <div>nothing loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
-      <Image url={`${domain}/images/${selection}`} />
+      <Image url={getCached(selection) || `${domain}/images/${selection}`} />
     )}
   </div >;
 };
-
-const Preview = styled.button`
-  background: ${f => f.selected ? 'lightgray' : 'none'};
-  border: none;
-`;
 
 // TODO: calculate initial scale
 const Image = ({ url, onUpdateMap }) => {
@@ -166,6 +166,12 @@ const Image = ({ url, onUpdateMap }) => {
     </TransformWrapper >
   )
 }
+
+const Preview = styled.button`
+  background: ${f => f.selected ? 'lightgray' : 'none'};
+  border: none;
+  padding: 10px;
+`;
 
 const Pin = styled.button`
   position: absolute;
