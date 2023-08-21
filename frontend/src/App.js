@@ -14,7 +14,6 @@ const domain = 'http://localhost:8000';
 // == PINS ==
 // FIXME: pin should not scale
 // FIXME: pins prevent double click
-// TODO: delete pins
 // TODO: store pins per image
 // TODO: add comment for a pin
 // TODO: pin should not appear when panning
@@ -40,11 +39,9 @@ export const App = () => {
 
   return <div style={{ width: '100vw', height: '100vh' }}>
     {images.map(f => (
-      <div>
-        <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
-          {f.file_stem}
-        </Preview>
-      </div>
+      <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
+        <img src={`${domain}/images/${f.file_stem}`} width="150" height="100" />
+      </Preview>
     ))}
     {images.length === 0 && <div>nothing loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
@@ -59,7 +56,7 @@ const Preview = styled.button`
 `;
 
 // TODO: calculate initial scale
-const Image = ({ url }) => {
+const Image = ({ url, onUpdateMap }) => {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [newPin, setNewPin] = useState(null);
@@ -98,7 +95,20 @@ const Image = ({ url }) => {
     setNewPin(null);
   }
 
-  console.log('p', pins);
+  // console.log('p', pins);
+
+  // const [mapPos, setMapPos] = useState({ x: 0, y: 0 });
+
+  // const onPan = (e) => {
+  //   const x = 0.5 * e.state.positionX / e.instance.bounds.minPositionX;
+  //   const y = 0.5 * e.state.positionY / e.instance.bounds.minPositionY;
+  //   setMapPos({ x, y });
+
+  //   console.log(e.state.positionX / e.state.scale, e.instance.bounds.minPositionX / e.state.scale);
+
+
+  //   //console.log(e.bounds.minPositionX * 1 / scale, e.bounds.minPositionY * 1 / scale);
+  // }
 
   return (
     <TransformWrapper
@@ -108,33 +118,19 @@ const Image = ({ url }) => {
       centerOnInit={true}
       onPanningStop={onPin}
       onPanningStart={onPanningStart}
+    // onTransformed={onPan}
     >
       {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
         <div style={{ width: '100vw', height: '100vh' }}>
-          <div className="tools">
-            <button onClick={() => zoomIn()}>+</button>
-            <button onClick={() => zoomOut()}>-</button>
-            <button onClick={() => resetTransform()}>x</button>
-            <div
-              style={{
-                position: "fixed",
-                zIndex: 5,
-                top: "50px",
-                right: "50px",
-              }}
-            >
-              <MiniMap width={200}>{<img src={url} alt="test" />}</MiniMap>
-            </div>
-          </div>
           <TransformComponent
             wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
           >
             <img src={url} alt="test" />
             {pins.filter(p => p !== activePin && p !== newPin).map((p) =>
               <Pin key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => setActivePin(p)}>
-                {/* <button style={{ fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }}>
-                  Create
-                </button> */}
+                {<div style={{ textWrap: 'nowrap', fontSize: '10rem', borderRadius: '5rem', position: 'absolute', top: '0rem', left: '10rem', padding: '0 2rem' }}>
+                  Some text
+                </div>}
               </Pin>
             )}
             {activePin && <Pin x={activePin.x} y={activePin.y} active>
@@ -149,6 +145,22 @@ const Image = ({ url }) => {
             </Pin>}
 
           </TransformComponent>
+          <div className="tools" style={{ position: "absolute", right: 0, top: 120, display: 'flex', flexDirection: 'column' }}>
+            <button onClick={() => resetTransform()}>x</button>
+            <button onClick={() => zoomIn()}>+</button>
+            {console.log('r', rest)}
+            <button onClick={() => zoomOut()}>-</button>
+            {/* <div
+              style={{
+                position: "fixed",
+                zIndex: 5,
+                top: "50px",
+                right: "50px",
+              }}
+            >
+              <Map x={mapPos.x} y={mapPos.y} />
+            </div> */}
+          </div>
         </div>
       )}
     </TransformWrapper >
@@ -171,3 +183,9 @@ const Pin = styled.button`
   }
   text-shadow: -.3rem -.3rem 0 white, .3rem -.3rem 0 white, -.3rem .3rem 0 white, .3rem .3rem 0 white;
 `;
+
+// const Map = ({ x, y }) => <div style={{ overflow: 'hidden', border: '1px solid black', position: 'absolute', right: 100, top: 0, width: 150, height: 100, background: 'black' }}>
+//   <div style={{ left: x * 150, top: y * 100, width: 100, height: 50, background: 'white', position: 'absolute' }}>
+
+//   </div>
+// </div>
