@@ -7,6 +7,7 @@ const domain = 'http://localhost:8000';
 // TODO: local file cache
 // TODO: mobile version
 // TODO: store pins on server
+// TODO: store images in local cache
 
 export const App = () => {
   const [images, setImages] = useState([]);
@@ -16,7 +17,7 @@ export const App = () => {
     if (selection) localStorage.setItem('selectedImage', selection);
   }, [selection]);
 
-  // todo force reload button
+  // TODO: force reload button
   useEffect(() => {
     const load = async () => {
       try {

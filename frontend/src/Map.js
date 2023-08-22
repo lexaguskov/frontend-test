@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Button, Input, Modal } from "antd";
 import { HomeOutlined, PlusOutlined, CommentOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
-import { Pin } from './Pin';
+import { Pin, PinButton } from './Pin';
 import styled from 'styled-components';
 
 
@@ -15,10 +15,8 @@ const setPinsForImage = (img, pins) => {
   pinDb[img] = pins;
 }
 
-// FIXME: calculate initial zoom factor
 // TODO: local file cache
 // TODO: mobile version
-// FIXME: calculate initial zoom factor
 // TODO: store pins on server
 
 // TODO: calculate initial scale
@@ -111,16 +109,22 @@ export const Map = ({ url, onUpdateMap, id }) => {
                 <Pin text={p.text} scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => { setNewPin(null); setActivePin(p) }} />
               )}
               {activePin && <Pin text={activePin.text} scale={pinScale} x={activePin.x} y={activePin.y} active>
-                <Button style={{ transform: 'scale(5)', margin: '2rem -10rem' }} danger icon={<DeleteOutlined />} onClick={deleteActivePin}>Delete pin</Button>
+                <PinButton danger icon={<DeleteOutlined />} onClick={deleteActivePin}>
+                  Delete pin
+                </PinButton>
               </Pin>}
               {newPin && <Pin text={pinText} scale={pinScale} x={newPin.x} y={newPin.y}>
-                {pinModalShown || <Button style={{ transform: 'scale(5)', margin: '2rem -10rem' }} type="primary" icon={<PlusOutlined />} onClick={addNewPin}>Add pin</Button>}
+                {pinModalShown || (
+                  <PinButton type="primary" icon={<PlusOutlined />} onClick={addNewPin}>
+                    Add pin
+                  </PinButton>
+                )}
               </Pin>}
             </TransformComponent>
             <Toolbar>
-              <Button style={{ marginTop: 8 }} icon={<HomeOutlined />} onClick={() => resetTransform()}></Button>
-              <Button style={{ marginTop: 8 }} icon={<PlusOutlined />} onClick={() => zoomIn()}></Button>
-              <Button style={{ marginTop: 8 }} icon={<MinusOutlined />} onClick={() => zoomOut()}></Button>
+              <ToolbarButton icon={<HomeOutlined />} onClick={resetTransform} />
+              <ToolbarButton icon={<PlusOutlined />} onClick={zoomIn} />
+              <ToolbarButton icon={<MinusOutlined />} onClick={zoomOut} />
             </Toolbar>
           </Container>
         )}
@@ -144,4 +148,8 @@ const Toolbar = styled.div`
   top: 180px;
   display: flex;
   flexDirection: column;
+`;
+
+const ToolbarButton = styled(Button)`
+  marginTop: 8px;
 `;
