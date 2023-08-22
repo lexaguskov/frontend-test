@@ -12,7 +12,6 @@ from app.config import config
     status_code=status.HTTP_200_OK,
 )
 async def get_image(file_stem: str):
-    print(file_stem, flush=True)
     if not file_stem.isalnum():
         return status.HTTP_404_NOT_FOUND
     
