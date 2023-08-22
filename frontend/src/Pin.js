@@ -16,7 +16,7 @@ const PinStroke = styled.div`
   text-wrap: nowrap;
   font-size: 20px;
   position: absolute;
-  margin-top: -36px;
+  margin-top: -28px;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 3px;
   color: white;
@@ -26,7 +26,7 @@ const PinText = styled.div`
   text-wrap: nowrap;
   font-size: 20px;
   position: absolute;
-  margin-top: -36px;
+  margin-top: -28px;
 `;
 
 const Container = styled.button`

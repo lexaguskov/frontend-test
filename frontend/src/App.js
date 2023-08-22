@@ -55,7 +55,7 @@ export const App = () => {
     load();
   }, []);
 
-  return <Container>
+  return <>
     {images.map(f => (
       <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
         <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
@@ -65,7 +65,7 @@ export const App = () => {
     {selection && images.find(a => a.file_stem === selection) && (
       <Map url={`${domain}/images/${selection}/2`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />
     )}
-  </Container>;
+  </>;
 };
 
 const Preview = styled.button`
@@ -77,9 +77,4 @@ const Preview = styled.button`
 const PreviewImage = styled.img`
 width: 150px;
 height: 100px;
-`;
-
-const Container = styled.div`
-width: 100vw;
-height: 100vh;
 `;

@@ -79,7 +79,6 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   return (
     <>
       <TransformWrapper
-        style={{ width: "100vw" }}
         initialScale={0.5}
         minScale={0.5}
         centerOnInit={true}
@@ -88,7 +87,7 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
         onTransformed={onPan}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
-          <Container>
+          <>
             <TransformComponent
               wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
             >
@@ -116,7 +115,7 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
               <ToolbarButton icon={<PlusOutlined />} onClick={() => zoomIn()} />
               <ToolbarButton icon={<MinusOutlined />} onClick={() => zoomOut()} />
             </Toolbar>
-          </Container>
+          </>
         )}
       </TransformWrapper >
       <Modal title="Add pin" open={pinModalShown} onOk={onPinAdded} onCancel={() => showPinTextModal(false)} closable={false}>
@@ -125,11 +124,6 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
     </>
   )
 }
-
-const Container = styled.div`
-  width: 100vw;
-  height: 100vh;
-`;
 
 const Toolbar = styled.div`
   padding: 16px;
