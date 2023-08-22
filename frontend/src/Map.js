@@ -5,25 +5,10 @@ import { HomeOutlined, PlusOutlined, CommentOutlined, DeleteOutlined, MinusOutli
 import { Pin, PinButton } from './Pin';
 import styled from 'styled-components';
 
-
-const pinDb = {};
-const getPinsForImage = (img) => {
-  return pinDb[img] || [];
-}
-
-const setPinsForImage = (img, pins) => {
-  pinDb[img] = pins;
-}
-
-// TODO: local file cache
-// TODO: mobile version
-// TODO: store pins on server
-
 // TODO: calculate initial scale
-export const Map = ({ url, onUpdateMap, id }) => {
+export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const inputRef = useRef(null);
 
-  const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [newPin, setNewPin] = useState(null);
 
@@ -48,15 +33,14 @@ export const Map = ({ url, onUpdateMap, id }) => {
   }
 
   useEffect(() => {
-    setPins(getPinsForImage(id));
     setNewPin(null);
     setActivePin(null);
   }, [id]);
 
   const deleteActivePin = () => {
-    setPins(p => p.filter(pin => pin !== activePin));
-    setPinsForImage(id, pins.filter(pin => pin !== activePin));
+    onDeletePin(activePin);
     setActivePin(null);
+    setNewPin(null); // just in case
   }
 
   const [pinText, setPinText] = useState('');
@@ -74,10 +58,9 @@ export const Map = ({ url, onUpdateMap, id }) => {
     }
   }
 
-  const handleSetPinText = async () => {
+  const onPinAdded = async () => {
     showPinTextModal(false);
-    setPins(p => [...p, { ...newPin, text: pinText }]);
-    setPinsForImage(id, [...pins, { ...newPin, text: pinText }]);
+    onAddPin({ ...newPin, text: pinText });
     setActivePin(null);
     setNewPin(null);
     setPinText('');
@@ -85,8 +68,13 @@ export const Map = ({ url, onUpdateMap, id }) => {
 
   const [pinScale, setPinScale] = useState(0);
   const onPan = (e) => {
-    setPinScale(0.2 * 1 / e.state.scale);
+    setPinScale(1 / e.state.scale);
   }
+
+  const onSelectPin = (pin) => {
+    setNewPin(null);
+    setActivePin(pin)
+  };
 
   return (
     <>
@@ -105,9 +93,11 @@ export const Map = ({ url, onUpdateMap, id }) => {
               wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
             >
               <img src={url} alt="" />
-              {pins.filter(p => p !== activePin && p !== newPin).map((p) =>
-                <Pin text={p.text} scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => { setNewPin(null); setActivePin(p) }} />
-              )}
+              {pins
+                .filter(p => p !== activePin && p !== newPin)
+                .map((p) =>
+                  <Pin text={p.text} scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => onSelectPin(p)} />
+                )}
               {activePin && <Pin text={activePin.text} scale={pinScale} x={activePin.x} y={activePin.y} active>
                 <PinButton danger icon={<DeleteOutlined />} onClick={deleteActivePin}>
                   Delete pin
@@ -122,14 +112,14 @@ export const Map = ({ url, onUpdateMap, id }) => {
               </Pin>}
             </TransformComponent>
             <Toolbar>
-              <ToolbarButton icon={<HomeOutlined />} onClick={resetTransform} />
-              <ToolbarButton icon={<PlusOutlined />} onClick={zoomIn} />
-              <ToolbarButton icon={<MinusOutlined />} onClick={zoomOut} />
+              <ToolbarButton icon={<HomeOutlined />} onClick={() => resetTransform()} />
+              <ToolbarButton icon={<PlusOutlined />} onClick={() => zoomIn()} />
+              <ToolbarButton icon={<MinusOutlined />} onClick={() => zoomOut()} />
             </Toolbar>
           </Container>
         )}
       </TransformWrapper >
-      <Modal title="Add pin" open={pinModalShown} onOk={handleSetPinText} onCancel={() => showPinTextModal(false)} closable={false}>
+      <Modal title="Add pin" open={pinModalShown} onOk={onPinAdded} onCancel={() => showPinTextModal(false)} closable={false}>
         <Input prefix={<CommentOutlined />} value={pinText} onChange={(e) => setPinText(e.target.value)} ref={inputRef} />
       </Modal>
     </>
@@ -147,9 +137,9 @@ const Toolbar = styled.div`
   right: 0;
   top: 180px;
   display: flex;
-  flexDirection: column;
+  flex-direction: column;
 `;
 
 const ToolbarButton = styled(Button)`
-  marginTop: 8px;
+  margin-top: 8px;
 `;

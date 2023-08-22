@@ -9,13 +9,37 @@ const domain = 'http://localhost:8000';
 // TODO: store pins on server
 // TODO: store images in local cache
 
+const pinDb = {};
+const getPinsForImage = (img) => {
+  return pinDb[img] || [];
+}
+
+const setPinsForImage = (img, pins) => {
+  pinDb[img] = pins;
+}
+
 export const App = () => {
   const [images, setImages] = useState([]);
   const [selection, setSelection] = useState(localStorage.getItem('selectedImage'));
 
+  const [pins, setPins] = useState([]);
+
   useEffect(() => {
     if (selection) localStorage.setItem('selectedImage', selection);
+    setPins(getPinsForImage(selection));
   }, [selection]);
+
+  const onAddPin = (pin) => {
+    const value = [...pins, pin];
+    setPins(value);
+    setPinsForImage(selection, value);
+  }
+
+  const onDeletePin = (pin) => {
+    const value = pins.filter(p => p !== pin);
+    setPins(value);
+    setPinsForImage(selection, value);
+  }
 
   // TODO: force reload button
   useEffect(() => {
@@ -39,7 +63,7 @@ export const App = () => {
     ))}
     {images.length === 0 && <div>No images loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
-      <Map url={`${domain}/images/${selection}/2`} id={selection} />
+      <Map url={`${domain}/images/${selection}/2`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />
     )}
   </Container>;
 };

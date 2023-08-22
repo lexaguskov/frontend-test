@@ -1,40 +1,51 @@
 import styled from 'styled-components';
+import { Button } from 'antd';
 
-export const Pin = ({ scale, x, y, text, active, children = [] }) => (
-  <Container scale={scale} x={x} y={y} active={active}>
-    <PinMenu>
-      {children}
-      {<div style={{ textWrap: 'nowrap', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', marginTop: '-18rem' }}>
-        {text}
-      </div>}
-    </PinMenu>
+export const Pin = ({ scale, x, y, text, active, children = [], onClick = null }) => (
+  <Container scale={scale} x={x} y={y} active={active} onClick={onClick}>
+    <PinStroke>{text}</PinStroke>
+    <PinText>{text}</PinText>
+    {children}
   </Container>);
 
-const PinMenu = styled.div`
-  padding-top: 4rem;
-  margin-top: 5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+export const PinButton = styled(Button)`
+  margin: 24px 0;
+`;
+
+const PinStroke = styled.div`
+  text-wrap: nowrap;
+  font-size: 20px;
+  position: absolute;
+  margin-top: -36px;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 3px;
+  color: white;
+`
+
+const PinText = styled.div`
+  text-wrap: nowrap;
+  font-size: 20px;
+  position: absolute;
+  margin-top: -36px;
 `;
 
 const Container = styled.button`
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
   position: absolute;
-  font-size: 10rem;
   left: ${p => p.x}px;
   top: ${p => p.y}px;
-  margin-left: -5rem;
-  margin-top: -8rem;
   cursor: pointer;
   background:  ${p => p.active ? "#f5222d" : "#1677ff"};
   color:  ${p => p.active ? "#f5222d" : "#1677ff"};
   border: none;
-  width: 5rem;
-  height: 5rem;
-  border-radius: 2.5rem;
   transform: scale(${p => p.scale});
-  border: .5rem solid white;
-  margin-top: -2.5rem;
-  margin-left: -2.5rem;
-  text-shadow: -.3rem -.3rem 0 white, .3rem -.3rem 0 white, -.3rem .3rem 0 white, .3rem .3rem 0 white;
+  border: 2px solid white;
+  margin-top: -6px;
+  margin-left: -8px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
