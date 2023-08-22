@@ -26,12 +26,14 @@ export const App = () => {
     setPins(value); // performing optimistic update
     const res = await addPin(selection, pin);
     if (res) {
+      pin.id = res;
       setPinsForImage(selection, value);
     }
     // TODO: rollback in case of error
   }
 
   const onDeletePin = async (pin) => {
+    if (!pin.id) return;
     const value = pins.filter(p => p !== pin);
     setPins(value); // performing optimistic update
     const res = await deletePin(selection, pin.id);
@@ -64,19 +66,24 @@ export const App = () => {
   }, [setImages]);
 
   return <>
-    <div>
+    <ImageList>
       {images.map(f => (
         <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
           <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
         </Preview>
       ))}
-    </div>
+    </ImageList>
     {images.length === 0 && <div>No images loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
       <Map url={`${domain}/images/${selection}/2`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />
     )}
   </>;
 };
+
+const ImageList = styled.div`
+  display: flex;
+  overflow-x: scroll;
+`;
 
 const Preview = styled.button`
   background: ${f => f.selected ? 'lightgray' : 'none'};

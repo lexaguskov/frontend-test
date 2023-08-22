@@ -6,6 +6,7 @@ import { Pin, PinButton } from './Pin';
 import styled from 'styled-components';
 
 // TODO: calculate initial scale
+// TODO: load mipmaps
 // TODO: minimap?
 export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const inputRef = useRef(null);
@@ -18,8 +19,7 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const onPanningStart = (e, j) => {
     panInfo.current = { x: j.offsetX, y: j.offsetY };
   }
-  const onPin = (e, j) => {
-    console.log(e, j);
+  const onPanningStop = (e, j) => {
     if (j.target.tagName === "BUTTON") return;
     if (j.target.tagName === "SPAN") return;
     const { offsetX, offsetY } = j;
@@ -29,8 +29,10 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
     if (dx === 0 && dy === 0) {
       const newPin = { x: offsetX, y: offsetY }
       setNewPin(newPin);
-      setActivePin(null);
+    } else {
+      setNewPin(null);
     }
+    setActivePin(null);
   }
 
   useEffect(() => {
@@ -82,8 +84,9 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
       <TransformWrapper
         initialScale={0.5}
         minScale={0.5}
+        maxScale={10}
         centerOnInit={true}
-        onPanningStop={onPin}
+        onPanningStop={onPanningStop}
         onPanningStart={onPanningStart}
         onTransformed={onPan}
       >
@@ -122,9 +125,30 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
       <Modal title="Add pin" open={pinModalShown} onOk={onPinAdded} onCancel={() => showPinTextModal(false)} closable={false}>
         <Input prefix={<CommentOutlined />} value={pinText} onChange={(e) => setPinText(e.target.value)} ref={inputRef} />
       </Modal>
+      <Footer>
+        {newPin && <Button type="primary" icon={<PlusOutlined />} onClick={addNewPin}>
+          Add pin
+        </Button>}
+        {activePin && <Button danger icon={<DeleteOutlined />} onClick={deleteActivePin}>
+          Delete pin
+        </Button>}
+      </Footer>
     </>
   )
 }
+
+const Footer = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: none; /* Hide on desktop */
+  padding: 16px;
+  @media (max-width: 768px) { 
+    display: flex; /* Show the footer on mobile devices */
+    justify-content: center;
+  }
+`;
 
 const Toolbar = styled.div`
   padding: 16px;
