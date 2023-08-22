@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Map } from './Map';
+import { addPin, deletePin, domain, listImages, listPins } from './api';
 
-const domain = 'http://localhost:8000';
-
-// TODO: local file cache
 // TODO: mobile version
-// TODO: store pins on server
 // TODO: store images in local cache
 
 const pinDb = {};
@@ -24,43 +21,56 @@ export const App = () => {
 
   const [pins, setPins] = useState([]);
 
-  useEffect(() => {
-    if (selection) localStorage.setItem('selectedImage', selection);
-    setPins(getPinsForImage(selection));
-  }, [selection]);
-
-  const onAddPin = (pin) => {
+  const onAddPin = async (pin) => {
     const value = [...pins, pin];
-    setPins(value);
-    setPinsForImage(selection, value);
+    setPins(value); // performing optimistic update
+    const res = await addPin(selection, pin);
+    if (res) {
+      setPinsForImage(selection, value);
+    }
+    // TODO: rollback in case of error
   }
 
-  const onDeletePin = (pin) => {
+  const onDeletePin = async (pin) => {
     const value = pins.filter(p => p !== pin);
-    setPins(value);
-    setPinsForImage(selection, value);
+    setPins(value); // performing optimistic update
+    const res = await deletePin(selection, pin.id);
+    if (res) {
+      setPinsForImage(selection, value);
+    }
+    // TODO: rollback in case of error
   }
 
-  // TODO: force reload button
+  // NOTE: using useEffect because we also want it to fire when the page is loaded
   useEffect(() => {
     const load = async () => {
-      try {
-        const res = await fetch(domain + '/images');
-        setImages(await res.json());
-      } catch (e) {
-        console.error('fail to load', e.toString());
-        // TODO: show error message
+      localStorage.setItem('selectedImage', selection);
+      setPins(getPinsForImage(selection)); // load from cache first
+      const pins = await listPins(selection);
+      if (pins !== null) {
+        setPinsForImage(pins);
+        setPins(pins);
       }
     }
+    if (selection) load();
+  }, [selection]);
+
+  useEffect(() => {
+    const load = async () => {
+      const images = await listImages();
+      if (images !== null) setImages(images)
+    }
     load();
-  }, []);
+  }, [setImages]);
 
   return <>
-    {images.map(f => (
-      <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
-        <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
-      </Preview>
-    ))}
+    <div>
+      {images.map(f => (
+        <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
+          <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
+        </Preview>
+      ))}
+    </div>
     {images.length === 0 && <div>No images loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
       <Map url={`${domain}/images/${selection}/2`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />

@@ -57,7 +57,7 @@ class Comment(SQLBase):
             ).scalar_one_or_none()
 
             if comment:
-                session.delete(comment)
+                await session.delete(comment)
                 await session.commit()
                 return True
             else:

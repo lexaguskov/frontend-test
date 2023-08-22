@@ -6,6 +6,7 @@ import { Pin, PinButton } from './Pin';
 import styled from 'styled-components';
 
 // TODO: calculate initial scale
+// TODO: minimap?
 export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const inputRef = useRef(null);
 

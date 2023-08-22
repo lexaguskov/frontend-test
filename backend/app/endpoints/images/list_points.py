@@ -2,7 +2,6 @@ from app.config import config
 from pathlib import Path
 
 from fastapi import APIRouter, status
-from pydantic import BaseModel
 
 from app.database.comment import Comment
 
