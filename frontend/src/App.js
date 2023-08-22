@@ -1,10 +1,20 @@
 import { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
-import { MiniMap, TransformWrapper, TransformComponent, useTransformInit } from "react-zoom-pan-pinch";
-import { fetchAndSaveToCache, getCached } from './localCache';
-
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+// import { fetchAndSaveToCache, getCached } from './localCache';
+import { Button, Input, Modal } from "antd";
+import { HomeOutlined, PlusOutlined, CommentOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
 
 const domain = 'http://localhost:8000';
+
+const pinDb = {};
+const getPinsForImage = (img) => {
+  return pinDb[img] || [];
+}
+
+const setPinsForImage = (img, pins) => {
+  pinDb[img] = pins;
+}
 
 // TODO: local file cache
 // TODO: mobile version
@@ -26,7 +36,6 @@ export const App = () => {
   // todo force reload button
   useEffect(() => {
     const load = async () => {
-      console.log('loading');
       try {
         const res = await fetch(domain + '/images');
         setImages(await res.json());
@@ -50,13 +59,15 @@ export const App = () => {
     ))}
     {images.length === 0 && <div>nothing loaded</div>}
     {selection && images.find(a => a.file_stem === selection) && (
-      <Image url={`${domain}/images/${selection}/2`} />
+      <Image url={`${domain}/images/${selection}/2`} id={selection} />
     )}
   </div >;
 };
 
 // TODO: calculate initial scale
-const Image = ({ url, onUpdateMap }) => {
+const Image = ({ url, onUpdateMap, id }) => {
+  const inputRef = useRef(null);
+
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState(null);
   const [newPin, setNewPin] = useState(null);
@@ -67,8 +78,9 @@ const Image = ({ url, onUpdateMap }) => {
     panInfo.current = { x: j.offsetX, y: j.offsetY };
   }
   const onPin = (e, j) => {
-    // console.log(e, j);
+    console.log(e, j);
     if (j.target.tagName === "BUTTON") return;
+    if (j.target.tagName === "SPAN") return;
     const { offsetX, offsetY } = j;
     // console.log(e.instance, j.offsetX, j.offsetY);
     //const { layerX, layerY } = j;
@@ -84,14 +96,36 @@ const Image = ({ url, onUpdateMap }) => {
     }
   }
 
+  useEffect(() => {
+    setPins(getPinsForImage(id));
+  }, [id]);
+
   const deleteActivePin = () => {
     setPins(p => p.filter(pin => pin !== activePin));
+    setPinsForImage(id, pins.filter(pin => pin !== activePin));
     setActivePin(null);
   }
 
-  const addNewPin = () => {
-    setPins(p => [...p, newPin]);
-    // setActivePin(newPin);
+  const [pinText, setPinText] = useState('');
+  const [pinModalShown, showPinTextModal] = useState(false);
+
+  const addNewPin = async () => {
+    setActivePin(null);
+    setPinText('New pin text');
+    showPinTextModal(true);
+    await new Promise(r => setTimeout(r, 200));
+    console.log('inpu', inputRef)
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(0, 999999);
+    }
+  }
+
+  const handleSetPinText = async () => {
+    showPinTextModal(false);
+    setPins(p => [...p, { ...newPin, text: pinText }]);
+    setPinsForImage(id, [...pins, { ...newPin, text: pinText }]);
+    setActivePin(null);
     setNewPin(null);
   }
 
@@ -113,46 +147,52 @@ const Image = ({ url, onUpdateMap }) => {
   }
 
   return (
-    <TransformWrapper
-      style={{ width: "100vw" }}
-      initialScale={0.2}
-      minScale={0.1}
-      centerOnInit={true}
-      onPanningStop={onPin}
-      onPanningStart={onPanningStart}
-      onTransformed={onPan}
-    >
-      {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
-        <div style={{ width: '100vw', height: '100vh' }}>
-          {/* {console.log('rrrr', rest.instance.transformState.scale)} */}
-          <TransformComponent
-            wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
-          >
-            <img src={url} alt="test" />
-            {pins.filter(p => p !== activePin && p !== newPin).map((p) =>
-              <Pin scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => setActivePin(p)}>
-                {<div style={{ textWrap: 'nowrap', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', margin: '-.6em 0 0 100px' }}>
-                  Some text
-                </div>}
-              </Pin>
-            )}
-            {activePin && <Pin scale={pinScale} x={activePin.x} y={activePin.y} active>
-              <button style={{ color: 'red', cursor: 'pointer', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', margin: '-.6em 0 0 100px' }} onClick={deleteActivePin}>
-                X&nbsp;Delete
-              </button>
-            </Pin>}
-            {newPin && <Pin scale={pinScale} x={newPin.x} y={newPin.y}>
-              <button style={{ color: 'blue', cursor: 'pointer', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', margin: '-.6em 0 0 100px' }} onClick={addNewPin}>
-                +&nbsp;Add
-              </button>
-            </Pin>}
+    <>
+      <TransformWrapper
+        style={{ width: "100vw" }}
+        initialScale={0.2}
+        minScale={0.1}
+        centerOnInit={true}
+        onPanningStop={onPin}
+        onPanningStart={onPanningStart}
+        onTransformed={onPan}
+      >
+        {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+          <div style={{ width: '100vw', height: '100vh' }}>
+            {/* {console.log('rrrr', rest.instance.transformState.scale)} */}
+            <TransformComponent
+              wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
+            >
+              <img src={url} alt="test" />
+              {pins.filter(p => p !== activePin && p !== newPin).map((p) =>
+                <Pin scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => { setNewPin(null); setActivePin(p) }}>
+                  <PinMenu>
+                    {<div style={{ textWrap: 'nowrap', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', marginTop: '-18rem' }}>
+                      {p.text}
+                    </div>}
+                  </PinMenu>
+                </Pin>
+              )}
+              {activePin && <Pin scale={pinScale} x={activePin.x} y={activePin.y} active>
+                <PinMenu>
+                  <Button style={{ transform: 'scale(5)', margin: '2rem -10rem' }} danger icon={<DeleteOutlined />} onClick={deleteActivePin}>Delete pin</Button>
+                  {<div style={{ textWrap: 'nowrap', fontSize: '6rem', borderRadius: '5rem', position: 'absolute', marginTop: '-18rem' }}>
+                    {activePin.text}
+                  </div>}
+                </PinMenu>
+              </Pin>}
+              {newPin && <Pin scale={pinScale} x={newPin.x} y={newPin.y}>
+                <PinMenu>
+                  <Button style={{ transform: 'scale(5)', margin: '2rem -10rem' }} type="primary" icon={<PlusOutlined />} onClick={addNewPin}>Add pin</Button>
+                </PinMenu>
+              </Pin>}
 
-          </TransformComponent>
-          <div className="tools" style={{ position: "absolute", right: 0, top: 120, display: 'flex', flexDirection: 'column' }}>
-            <button onClick={() => resetTransform()}>x</button>
-            <button onClick={() => zoomIn()}>+</button>
-            <button onClick={() => zoomOut()}>-</button>
-            {/* <div
+            </TransformComponent>
+            <div className="tools" style={{ padding: 16, position: "absolute", right: 0, top: '40vh', display: 'flex', flexDirection: 'column' }}>
+              <Button style={{ marginTop: 8 }} icon={<HomeOutlined />} onClick={() => resetTransform()}></Button>
+              <Button style={{ marginTop: 8 }} icon={<PlusOutlined />} onClick={() => zoomIn()}></Button>
+              <Button style={{ marginTop: 8 }} icon={<MinusOutlined />} onClick={() => zoomOut()}></Button>
+              {/* <div
               style={{
                 position: "fixed",
                 zIndex: 5,
@@ -162,12 +202,37 @@ const Image = ({ url, onUpdateMap }) => {
             >
               <Map x={mapPos.x} y={mapPos.y} />
             </div> */}
+            </div>
           </div>
-        </div>
-      )}
-    </TransformWrapper >
+        )}
+      </TransformWrapper >
+      <Footer>
+        {newPin && <Button icon={<PlusOutlined />} onClick={addNewPin}>Add POI</Button>}
+      </Footer>
+      <Modal title="Add pin" open={pinModalShown} onOk={handleSetPinText} onCancel={() => showPinTextModal(false)} closable={false}>
+        <Input prefix={<CommentOutlined />} value={pinText} onChange={(e) => setPinText(e.target.value)} ref={inputRef} />
+      </Modal>
+    </>
   )
 }
+
+const PinMenu = styled.div`
+padding-top: 4rem;
+margin-top: 5rem;
+display: flex;
+flex-direction: column;
+align-items: center;
+`
+
+const Footer = styled.div`
+position: absolute;
+bottom: 0;
+left: 0;
+right: 0;
+display: flex;
+justify-content: center;
+padding: 16px;
+`
 
 const Preview = styled.button`
   background: ${f => f.selected ? 'lightgray' : 'none'};
@@ -183,8 +248,8 @@ top: ${p => p.y}px;
 margin-left: -5rem;
 margin-top: -8rem;
 cursor: pointer;
-background:  ${p => p.active ? "red" : "blue"};
-color:  ${p => p.active ? "red" : "blue"};
+background:  ${p => p.active ? "#f5222d" : "#1677ff"};
+color:  ${p => p.active ? "#f5222d" : "#1677ff"};
 border: none;
 width: 5rem;
 height: 5rem;
@@ -195,9 +260,3 @@ margin-top: -2.5rem;
 margin-left: -2.5rem;
   text-shadow: -.3rem -.3rem 0 white, .3rem -.3rem 0 white, -.3rem .3rem 0 white, .3rem .3rem 0 white;
 `;
-
-// const Map = ({ x, y }) => <div style={{ overflow: 'hidden', border: '1px solid black', position: 'absolute', right: 100, top: 0, width: 150, height: 100, background: 'black' }}>
-//   <div style={{ left: x * 150, top: y * 100, width: 100, height: 50, background: 'white', position: 'absolute' }}>
-
-//   </div>
-// </div>
