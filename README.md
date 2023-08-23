@@ -1,5 +1,7 @@
 # Comments
-![screen recoding](https://lexaguskov.github.io/frontend-test/output.mp4)
+A great task! Nice combination of tecnhical challenges and basics.
+
+[Heres a screen recording](https://lexaguskov.github.io/frontend-test/output.mp4)
 
 First, some considerations:
 - time is limited so the app does not need to be perfect
