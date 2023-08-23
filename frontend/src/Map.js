@@ -4,10 +4,9 @@ import { Button, Input, Modal } from "antd";
 import { HomeOutlined, PlusOutlined, CommentOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
 import { Pin, PinButton } from './Pin';
 import styled from 'styled-components';
-import { imageCache } from './imageCache';
+import { useCachedImage } from './hooks/useCachedImage';
 
 // TODO: calculate initial scale
-// TODO: local image cache
 // TODO: minimap?
 
 // FIXME: currently we're using only 2 levels of mipmaps (full scale and "/2" which is 1/16th of the area)
@@ -99,6 +98,9 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
     setPinScale(1 / e.state.scale);
   }
 
+  const urlSmall = useCachedImage(url + MIPMAP_SUFFIX);
+  const urlBig = useCachedImage(url);
+
   return (
     <>
       <TransformWrapper
@@ -115,8 +117,8 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
             <TransformComponent
               wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
             >
-              <img src={imageCache(url + MIPMAP_SUFFIX)} alt="" />
-              <FullScaleImage src={imageCache(url)} scale={rest.instance.transformState.scale} alt="" />
+              <img src={urlSmall} alt="" />
+              <FullScaleImage src={urlBig} scale={rest.instance.transformState.scale} alt="" />
               {pins
                 .filter(p => p !== selection && p !== newPin)
                 .map((p) =>

@@ -1,31 +1,22 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Map } from './Map';
-import { addPin, deletePin, domain, listImages, listPins } from './api';
-
-const cache = {
-  db: {},
-  getPinsForImage(img) {
-    return this.db[img] || [];
-  },
-  setPinsForImage(img, pins) {
-    this.db[img] = pins;
-  },
-}
+import { addPin, deletePin, domain, listImages, listPins } from './api/api';
+import { usePersistedState } from './hooks/usePersistedState';
 
 export const App = () => {
   const [images, setImages] = useState([]);
-  const [selection, setSelection] = useState(localStorage.getItem('selectedImage'));
-
-  const [pins, setPins] = useState([]);
+  const [selection, setSelection] = usePersistedState('selection', null);
+  const [pins, setPins] = usePersistedState(`pins:${selection}`, []);
 
   const onAddPin = async (pin) => {
     const value = [...pins, pin];
-    setPins(value); // performing optimistic update
+    setPins(value); // optimistic update
     const res = await addPin(selection, pin);
+    // TRICKY: pin is persisted locally, but it may not have an id assigned yet
     if (res) {
       pin.id = res;
-      cache.setPinsForImage(selection, value);
+      setPins(p => [...p]); // trigger re-save for the store
     }
     // TODO: rollback in case of error
   }
@@ -33,11 +24,8 @@ export const App = () => {
   const onDeletePin = async (pin) => {
     if (!pin.id) return;
     const value = pins.filter(p => p !== pin);
-    setPins(value); // performing optimistic update
-    const res = await deletePin(selection, pin.id);
-    if (res) {
-      cache.setPinsForImage(selection, value);
-    }
+    setPins(value); // optimistic update
+    await deletePin(selection, pin.id);
     // TODO: rollback in case of error
   }
 
@@ -45,11 +33,8 @@ export const App = () => {
   // NOTE: using useEffect here because we also want it to fire when the page is loaded
   useEffect(() => {
     const load = async () => {
-      localStorage.setItem('selectedImage', selection);
-      setPins(cache.getPinsForImage(selection)); // load from cache first
       const pins = await listPins(selection);
       if (pins !== null) {
-        cache.setPinsForImage(selection, pins);
         setPins(pins);
       }
     }
