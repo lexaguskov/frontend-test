@@ -32,10 +32,12 @@ const PinText = styled.div`
   margin-top: -28px;
 `;
 
-const Container = styled.button`
-  width: 16px;
-  height: 16px;
-  border-radius: 8px;
+// TRICKY: we exclude scale from style to avoid generating 1000s of classes
+const Container = styled.span
+  .attrs(p => ({ style: { transform: `scale(${p.scale})` } }))`
+  width: 12px;
+  height: 12px;
+  border-radius: 12px;
   position: absolute;
   left: ${p => p.x}px;
   top: ${p => p.y}px;
@@ -43,7 +45,6 @@ const Container = styled.button`
   background:  ${p => p.active ? "#f5222d" : "#1677ff"};
   color:  ${p => p.active ? "#f5222d" : "#1677ff"};
   border: none;
-  transform: scale(${p => p.scale});
   border: 2px solid white;
   margin-top: -6px;
   margin-left: -8px;

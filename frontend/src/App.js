@@ -60,8 +60,8 @@ export const App = () => {
           <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
         </Preview>
       ))}
+      {images.length === 0 && <div>No images available</div>}
     </ImageList>
-    {images.length === 0 && <div>No images</div>}
     {selection && images.find(a => a.file_stem === selection) && (
       <Map url={`${domain}/images/${selection}`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />
     )}
