@@ -1,18 +1,24 @@
-const caches = {
-}
+const db = {};
+const loading = {};
 
-export async function fetchAndSaveToCache(url, name) {
-  if (caches[name]) return caches[name];
-
+export async function fetchAndSaveToCache(url) {
+  if (loading[url]) return; // do not load if already in progress
+  loading[url] = true;
   const res = await fetch(url)
   const blob = await res.blob();
   // await storeInIndexedDB(blob);
-  caches[name] = URL.createObjectURL(blob);
-  return caches[name];
+  db[url] = URL.createObjectURL(blob);
+  delete loading[url];
+  console.log('file loaded', db[url]);
 }
 
-export function getCached(name) {
-  return caches[name]
+// TRICKY: this function attemps to find image in local cache
+// in case there's none, an original url is shown, but the content will load in background abd will be used on next attempt
+export function imageCache(url) {
+  if (db[url]) return db[url];
+
+  fetchAndSaveToCache(url);
+  return url;
 }
 
 // // Open IndexedDB

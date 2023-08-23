@@ -4,80 +4,100 @@ import { Button, Input, Modal } from "antd";
 import { HomeOutlined, PlusOutlined, CommentOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
 import { Pin, PinButton } from './Pin';
 import styled from 'styled-components';
+import { imageCache } from './imageCache';
 
 // TODO: calculate initial scale
-// TODO: load mipmaps
+// TODO: local image cache
 // TODO: minimap?
+
+// FIXME: currently we're using only 2 levels of mipmaps (full scale and "/2" which is 1/16th of the area)
+// full scale is shown with zoom factor 3 or more - all that is hardcoded and should be done in a smarter way
+const MIPMAP_SUFFIX = "/2";
+const MIPMAP_ZOOM_FACTOR = 3;
+
 export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const inputRef = useRef(null);
 
-  const [activePin, setActivePin] = useState(null);
+  const [selection, setSelection] = useState(null);
   const [newPin, setNewPin] = useState(null);
 
+  // TRICKY: the map component reports clicks as pan events
+  // so we're keeping coordinates to filter out real gestures from clicks
+  // TODO: handle doubleclicks correctly - should not create a pin
   const panInfo = useRef({ x: 0, y: 0 });
-
   const onPanningStart = (e, j) => {
     panInfo.current = { x: j.offsetX, y: j.offsetY };
   }
   const onPanningStop = (e, j) => {
-    if (j.target.tagName === "BUTTON") return;
-    if (j.target.tagName === "SPAN") return;
+    if (j.target.tagName === "BUTTON") return; // pin is a <button>
+    if (j.target.tagName === "SPAN") return; // antd button is a <span>
     const { offsetX, offsetY } = j;
     const dx = offsetX - panInfo.current.x;
     const dy = offsetY - panInfo.current.y;
 
     if (dx === 0 && dy === 0) {
+      // okay, this is a click, not a pan gesture
       const newPin = { x: offsetX, y: offsetY }
       setNewPin(newPin);
     } else {
       setNewPin(null);
     }
-    setActivePin(null);
+    setSelection(null); // any gesture removes the selection
   }
 
   useEffect(() => {
     setNewPin(null);
-    setActivePin(null);
+    setSelection(null);
   }, [id]);
 
-  const deleteActivePin = () => {
-    onDeletePin(activePin);
-    setActivePin(null);
-    setNewPin(null); // just in case
-  }
-
+  // adding a pin
   const [pinText, setPinText] = useState('');
   const [pinModalShown, showPinTextModal] = useState(false);
 
-  const addNewPin = async () => {
-    setActivePin(null);
+  const onAddPinClick = async () => {
+    setSelection(null);
     setPinText('New pin text');
     showPinTextModal(true);
     await new Promise(r => setTimeout(r, 200));
-    console.log('inpu', inputRef)
     if (inputRef.current) {
       inputRef.current.focus();
       inputRef.current.setSelectionRange(0, 999999);
     }
   }
 
-  const onPinAdded = async () => {
+  const onPinModalOk = async () => {
     showPinTextModal(false);
     onAddPin({ ...newPin, text: pinText });
-    setActivePin(null);
+    setSelection(null);
     setNewPin(null);
     setPinText('');
   }
 
-  const [pinScale, setPinScale] = useState(0);
-  const onPan = (e) => {
-    setPinScale(1 / e.state.scale);
+  const onPinModalCancel = () => {
+    showPinTextModal(false);
+    setPinText('');
   }
 
-  const onSelectPin = (pin) => {
+  // deleting a pin
+
+  const onDeletePinClick = () => {
+    onDeletePin(selection);
+    setSelection(null);
     setNewPin(null);
-    setActivePin(pin)
+  }
+
+  // selecting a pin
+  const onPinClick = (pin) => {
+    setNewPin(null);
+    setSelection(pin);
   };
+
+  // TRICKY: we need to preserve scale of pins when zooming
+  // there must a be a better way to do this that does not require a rerender (updating css?)
+  const [pinScale, setPinScale] = useState(0);
+  const onTransformed = (e) => {
+    setPinScale(1 / e.state.scale);
+  }
 
   return (
     <>
@@ -88,27 +108,28 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
         centerOnInit={true}
         onPanningStop={onPanningStop}
         onPanningStart={onPanningStart}
-        onTransformed={onPan}
+        onTransformed={onTransformed}
       >
-        {({ zoomIn, zoomOut, resetTransform }) => (
+        {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
           <>
             <TransformComponent
               wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
             >
-              <img src={url} alt="" />
+              <img src={imageCache(url + MIPMAP_SUFFIX)} alt="" />
+              <FullScaleImage src={imageCache(url)} scale={rest.instance.transformState.scale} alt="" />
               {pins
-                .filter(p => p !== activePin && p !== newPin)
+                .filter(p => p !== selection && p !== newPin)
                 .map((p) =>
-                  <Pin text={p.text} scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => onSelectPin(p)} />
+                  <Pin text={p.text} scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => onPinClick(p)} />
                 )}
-              {activePin && <Pin text={activePin.text} scale={pinScale} x={activePin.x} y={activePin.y} active>
-                <PinButton danger icon={<DeleteOutlined />} onClick={deleteActivePin}>
+              {selection && <Pin text={selection.text} scale={pinScale} x={selection.x} y={selection.y} active>
+                <PinButton danger icon={<DeleteOutlined />} onClick={onDeletePinClick}>
                   Delete pin
                 </PinButton>
               </Pin>}
               {newPin && <Pin text={pinText} scale={pinScale} x={newPin.x} y={newPin.y}>
                 {pinModalShown || (
-                  <PinButton type="primary" icon={<PlusOutlined />} onClick={addNewPin}>
+                  <PinButton type="primary" icon={<PlusOutlined />} onClick={onAddPinClick}>
                     Add pin
                   </PinButton>
                 )}
@@ -122,20 +143,29 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
           </>
         )}
       </TransformWrapper >
-      <Modal title="Add pin" open={pinModalShown} onOk={onPinAdded} onCancel={() => showPinTextModal(false)} closable={false}>
-        <Input prefix={<CommentOutlined />} value={pinText} onChange={(e) => setPinText(e.target.value)} ref={inputRef} />
+      <Modal title="Add pin" open={pinModalShown} onOk={onPinModalOk} onCancel={onPinModalCancel} closable={false}>
+        <Input prefix={<CommentOutlined />} value={pinText} onChange={(e) => setPinText(e.target.value)} ref={inputRef} onPressEnter={onPinModalOk} />
       </Modal>
       <Footer>
-        {newPin && <Button type="primary" icon={<PlusOutlined />} onClick={addNewPin}>
+        {newPin && <Button type="primary" icon={<PlusOutlined />} onClick={onAddPinClick}>
           Add pin
         </Button>}
-        {activePin && <Button danger icon={<DeleteOutlined />} onClick={deleteActivePin}>
+        {selection && <Button danger icon={<DeleteOutlined />} onClick={onDeletePinClick}>
           Delete pin
         </Button>}
       </Footer>
     </>
   )
 }
+
+const FullScaleImage = styled.img`
+  display: ${p => p.scale >= MIPMAP_ZOOM_FACTOR ? undefined : 'none'};
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+`;
 
 const Footer = styled.div`
   position: absolute;

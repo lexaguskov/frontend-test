@@ -3,16 +3,14 @@ import styled from 'styled-components';
 import { Map } from './Map';
 import { addPin, deletePin, domain, listImages, listPins } from './api';
 
-// TODO: mobile version
-// TODO: store images in local cache
-
-const pinDb = {};
-const getPinsForImage = (img) => {
-  return pinDb[img] || [];
-}
-
-const setPinsForImage = (img, pins) => {
-  pinDb[img] = pins;
+const cache = {
+  db: {},
+  getPinsForImage(img) {
+    return this.db[img] || [];
+  },
+  setPinsForImage(img, pins) {
+    this.db[img] = pins;
+  },
 }
 
 export const App = () => {
@@ -27,7 +25,7 @@ export const App = () => {
     const res = await addPin(selection, pin);
     if (res) {
       pin.id = res;
-      setPinsForImage(selection, value);
+      cache.setPinsForImage(selection, value);
     }
     // TODO: rollback in case of error
   }
@@ -38,29 +36,34 @@ export const App = () => {
     setPins(value); // performing optimistic update
     const res = await deletePin(selection, pin.id);
     if (res) {
-      setPinsForImage(selection, value);
+      cache.setPinsForImage(selection, value);
     }
     // TODO: rollback in case of error
   }
 
-  // NOTE: using useEffect because we also want it to fire when the page is loaded
+  // load list of pins when selecting an image
+  // NOTE: using useEffect here because we also want it to fire when the page is loaded
   useEffect(() => {
     const load = async () => {
       localStorage.setItem('selectedImage', selection);
-      setPins(getPinsForImage(selection)); // load from cache first
+      setPins(cache.getPinsForImage(selection)); // load from cache first
       const pins = await listPins(selection);
       if (pins !== null) {
-        setPinsForImage(pins);
+        cache.setPinsForImage(selection, pins);
         setPins(pins);
       }
     }
     if (selection) load();
   }, [selection]);
 
+  // load list of images when mounted 
   useEffect(() => {
     const load = async () => {
       const images = await listImages();
-      if (images !== null) setImages(images)
+      if (images !== null) setImages(images);
+      if (images.length) {
+        setSelection(selection => selection || images[0].file_stem); // select 1st image if nothing is selected
+      }
     }
     load();
   }, [setImages]);
@@ -68,14 +71,14 @@ export const App = () => {
   return <>
     <ImageList>
       {images.map(f => (
-        <Preview selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
+        <Preview key={f.file_stem} selected={f.file_stem === selection} onClick={() => setSelection(f.file_stem)}>
           <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
         </Preview>
       ))}
     </ImageList>
-    {images.length === 0 && <div>No images loaded</div>}
+    {images.length === 0 && <div>No images</div>}
     {selection && images.find(a => a.file_stem === selection) && (
-      <Map url={`${domain}/images/${selection}/2`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />
+      <Map url={`${domain}/images/${selection}`} id={selection} pins={pins} onAddPin={onAddPin} onDeletePin={onDeletePin} />
     )}
   </>;
 };
