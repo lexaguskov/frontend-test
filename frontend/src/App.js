@@ -62,7 +62,7 @@ export const App = () => {
             selected={f.file_stem === selection}
             onClick={() => setSelection(f.file_stem)}
           >
-            <PreviewImage src={`${domain}/images/${f.file_stem}/preview`} />
+            <PreviewImage src={`${domain}/images/${f.file_stem}/4`} />
           </Preview>
         ))}
         {images.length === 0 && <div>No images available</div>}
