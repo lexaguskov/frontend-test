@@ -1,10 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Button, Input, Modal } from "antd";
-import { HomeOutlined, PlusOutlined, CommentOutlined, DeleteOutlined, MinusOutlined } from '@ant-design/icons';
-import { Pin, PinButton } from './Pin';
-import styled from 'styled-components';
-import { useCachedImage } from './hooks/useCachedImage';
+import {
+  HomeOutlined,
+  PlusOutlined,
+  CommentOutlined,
+  DeleteOutlined,
+  MinusOutlined,
+} from "@ant-design/icons";
+import { Pin, PinButton } from "./Pin";
+import styled from "styled-components";
+import { useCachedImage } from "./hooks/useCachedImage";
 
 // TODO: calculate initial scale
 // TODO: minimap?
@@ -26,7 +32,7 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const panInfo = useRef({ x: 0, y: 0 });
   const onPanningStart = (e, j) => {
     panInfo.current = { x: j.offsetX, y: j.offsetY };
-  }
+  };
   const onPanningStop = (e, j) => {
     if (j.target.tagName === "BUTTON") return; // pin is a <button>
     if (j.target.tagName === "SPAN") return; // antd button is a <span>
@@ -36,13 +42,13 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
 
     if (dx === 0 && dy === 0) {
       // okay, this is a click, not a pan gesture
-      const newPin = { x: offsetX, y: offsetY }
+      const newPin = { x: offsetX, y: offsetY };
       setNewPin(newPin);
     } else {
       setNewPin(null);
     }
     setSelection(null); // any gesture removes the selection
-  }
+  };
 
   useEffect(() => {
     setNewPin(null);
@@ -50,32 +56,32 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   }, [id]);
 
   // adding a pin
-  const [pinText, setPinText] = useState('');
+  const [pinText, setPinText] = useState("");
   const [pinModalShown, showPinTextModal] = useState(false);
 
   const onAddPinClick = async () => {
     setSelection(null);
-    setPinText('New pin text');
+    setPinText("New pin text");
     showPinTextModal(true);
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
     if (inputRef.current) {
       inputRef.current.focus();
       inputRef.current.setSelectionRange(0, 999999);
     }
-  }
+  };
 
   const onPinModalOk = async () => {
     showPinTextModal(false);
     onAddPin({ ...newPin, text: pinText });
     setSelection(null);
     setNewPin(null);
-    setPinText('');
-  }
+    setPinText("");
+  };
 
   const onPinModalCancel = () => {
     showPinTextModal(false);
-    setPinText('');
-  }
+    setPinText("");
+  };
 
   // deleting a pin
 
@@ -83,7 +89,7 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
     onDeletePin(selection);
     setSelection(null);
     setNewPin(null);
-  }
+  };
 
   // selecting a pin
   const onPinClick = (pin) => {
@@ -96,7 +102,7 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
   const [pinScale, setPinScale] = useState(0);
   const onTransformed = (e) => {
     setPinScale(1 / e.state.scale);
-  }
+  };
 
   const urlSmall = useCachedImage(url + MIPMAP_SUFFIX);
   const urlBig = useCachedImage(url);
@@ -115,53 +121,111 @@ export const Map = ({ url, pins, onAddPin, onDeletePin, id }) => {
         {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
           <>
             <TransformComponent
-              wrapperStyle={{ maxWidth: "100%", maxHeight: "calc(100vh - 100px)" }}
+              wrapperStyle={{
+                maxWidth: "100%",
+                maxHeight: "calc(100vh - 100px)",
+              }}
             >
               <img src={urlSmall} alt="" />
-              <FullScaleImage src={urlBig} scale={rest.instance.transformState.scale} alt="" />
+              <FullScaleImage
+                src={urlBig}
+                scale={rest.instance.transformState.scale}
+                alt=""
+              />
               {pins
-                .filter(p => p !== selection && p !== newPin)
-                .map((p) =>
-                  <Pin text={p.text} scale={pinScale} key={`${p.x}.${p.y}`} x={p.x} y={p.y} onClick={() => onPinClick(p)} />
-                )}
-              {selection && <Pin text={selection.text} scale={pinScale} x={selection.x} y={selection.y} active>
-                <PinButton danger icon={<DeleteOutlined />} onClick={onDeletePinClick}>
-                  Delete pin
-                </PinButton>
-              </Pin>}
-              {newPin && <Pin text={pinText} scale={pinScale} x={newPin.x} y={newPin.y}>
-                {pinModalShown || (
-                  <PinButton type="primary" icon={<PlusOutlined />} onClick={onAddPinClick}>
-                    Add pin
+                .filter((p) => p !== selection && p !== newPin)
+                .map((p) => (
+                  <Pin
+                    text={p.text}
+                    scale={pinScale}
+                    key={`${p.x}.${p.y}`}
+                    x={p.x}
+                    y={p.y}
+                    onClick={() => onPinClick(p)}
+                  />
+                ))}
+              {selection && (
+                <Pin
+                  text={selection.text}
+                  scale={pinScale}
+                  x={selection.x}
+                  y={selection.y}
+                  active
+                >
+                  <PinButton
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={onDeletePinClick}
+                  >
+                    Delete pin
                   </PinButton>
-                )}
-              </Pin>}
+                </Pin>
+              )}
+              {newPin && (
+                <Pin text={pinText} scale={pinScale} x={newPin.x} y={newPin.y}>
+                  {pinModalShown || (
+                    <PinButton
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={onAddPinClick}
+                    >
+                      Add pin
+                    </PinButton>
+                  )}
+                </Pin>
+              )}
             </TransformComponent>
             <Toolbar>
-              <ToolbarButton icon={<HomeOutlined />} onClick={() => resetTransform()} />
+              <ToolbarButton
+                icon={<HomeOutlined />}
+                onClick={() => resetTransform()}
+              />
               <ToolbarButton icon={<PlusOutlined />} onClick={() => zoomIn()} />
-              <ToolbarButton icon={<MinusOutlined />} onClick={() => zoomOut()} />
+              <ToolbarButton
+                icon={<MinusOutlined />}
+                onClick={() => zoomOut()}
+              />
             </Toolbar>
           </>
         )}
-      </TransformWrapper >
-      <Modal title="Add pin" open={pinModalShown} onOk={onPinModalOk} onCancel={onPinModalCancel} closable={false}>
-        <Input prefix={<CommentOutlined />} value={pinText} onChange={(e) => setPinText(e.target.value)} ref={inputRef} onPressEnter={onPinModalOk} />
+      </TransformWrapper>
+      <Modal
+        title="Add pin"
+        open={pinModalShown}
+        onOk={onPinModalOk}
+        onCancel={onPinModalCancel}
+        closable={false}
+      >
+        <Input
+          prefix={<CommentOutlined />}
+          value={pinText}
+          onChange={(e) => setPinText(e.target.value)}
+          ref={inputRef}
+          onPressEnter={onPinModalOk}
+        />
       </Modal>
       <Footer>
-        {newPin && <Button type="primary" icon={<PlusOutlined />} onClick={onAddPinClick}>
-          Add pin
-        </Button>}
-        {selection && <Button danger icon={<DeleteOutlined />} onClick={onDeletePinClick}>
-          Delete pin
-        </Button>}
+        {newPin && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={onAddPinClick}
+          >
+            Add pin
+          </Button>
+        )}
+        {selection && (
+          <Button danger icon={<DeleteOutlined />} onClick={onDeletePinClick}>
+            Delete pin
+          </Button>
+        )}
       </Footer>
     </>
-  )
-}
+  );
+};
 
 const FullScaleImage = styled.img`
-  display: ${p => p.scale >= MIPMAP_ZOOM_FACTOR ? undefined : 'none'};
+  display: ${(p) => (p.scale >= MIPMAP_ZOOM_FACTOR ? undefined : "none")};
   position: absolute;
   left: 0;
   top: 0;
@@ -176,7 +240,7 @@ const Footer = styled.div`
   right: 0;
   display: none; /* Hide on desktop */
   padding: 16px;
-  @media (max-width: 768px) { 
+  @media (max-width: 768px) {
     display: flex; /* Show the footer on mobile devices */
     justify-content: center;
   }

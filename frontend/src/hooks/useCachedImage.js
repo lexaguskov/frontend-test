@@ -1,5 +1,5 @@
-import local from 'localforage';
-import { useEffect, useState } from 'react';
+import local from "localforage";
+import { useEffect, useState } from "react";
 
 export function useCachedImage(url) {
   const [blobUrl, setBlobUrl] = useState(null);
@@ -10,19 +10,19 @@ export function useCachedImage(url) {
         setBlobUrl(URL.createObjectURL(item));
         return;
       } catch (e) {
-        console.log('file not in db', url);
+        console.log("file not in db", url);
       }
 
       try {
         const res = await fetch(url);
         const blob = await res.blob();
-        console.log('file loaded', url);
+        console.log("file loaded", url);
         setBlobUrl(URL.createObjectURL(blob));
 
         await local.setItem(url, blob);
-        console.log('file stored in db', url);
+        console.log("file stored in db", url);
       } catch (e) {
-        console.error('failed to fetch file', url);
+        console.error("failed to fetch file", url);
         setBlobUrl(url); // fallback to original url
       }
     };
