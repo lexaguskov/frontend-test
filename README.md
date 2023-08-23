@@ -1,8 +1,10 @@
 # Comments
+![screen recoding](https://lexaguskov.github.io/frontend-test/output.mp4)
+
 First, some considerations:
 - time is limited so the app does not need to be perfect
 - hence no tests, no a11y, no translations
-- mobile support is basic, action buttons are shown on the bottom of the screen
+- mobile support is basic, only change is the action buttons are shown on the bottom of the screen
 - test is for frontend so code quality for backend is less important
 
 ## Challenges
